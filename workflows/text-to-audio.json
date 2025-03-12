@@ -1,0 +1,320 @@
+{
+  "nodes": [
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Você é um professor universitário com muita experiência em criação de questões de prova. Você trabalha somente com a educação publica!\n\nSeu trabalho é gerar um resumo extremamente didático a respeito da aula e também gerar 10 questões de múltipla escolha com base no conteúdo abaixo:\n\n{{$json[\"body\"][\"textoExtraido\"]}}",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 1.7,
+      "position": [80, -100],
+      "id": "23699eb3-cd98-4ee4-b312-b17491d3b162",
+      "name": "AI Agent"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "mode": "list",
+          "value": "gpt-4o-mini"
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.2,
+      "position": [80, 120],
+      "id": "43ad7ef0-32bf-4835-b6c1-8c49b3957e36",
+      "name": "OpenAI Chat Model",
+      "credentials": {
+        "openAiApi": {
+          "id": "POFWUvpVJHkstIgT",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [780, -100],
+      "id": "84811c68-0e57-4770-9468-5d54c44fb0a5",
+      "name": "Respond to Webhook"
+    },
+    {
+      "parameters": {
+        "content": "## Recebe o texto limpo do .docx e transforma em audio",
+        "height": 460,
+        "width": 1520
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [-580, -180],
+      "typeVersion": 1,
+      "id": "fb7db52f-f0ed-4f0c-b63c-fe1ddbd59b7b",
+      "name": "Sticky Note"
+    },
+    {
+      "parameters": {
+        "values": {
+          "string": [
+            {
+              "name": "textoExtraido",
+              "value": "={{$json[\"body\"][\"textoExtraido\"]}}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "name": "Set - ARMAZENA TEXTO EXTRAÍDO",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 1,
+      "position": [-260, -80],
+      "id": "d1c0ccca-00ca-4d19-b92e-4c18b8dec70a"
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "receive-text",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "name": "Webhook - RECEBE TEXTO",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [-500, -80],
+      "webhookId": "your-webhook-id",
+      "id": "9399900b-03f9-4c2c-925a-ccce9ed3c259"
+    },
+    {
+      "parameters": {
+        "resource": "audio",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "typeVersion": 1.8,
+      "position": [500, -100],
+      "id": "bc4949bb-262e-4687-847e-85679d9a3716",
+      "name": "OpenAI",
+      "credentials": {
+        "openAiApi": {
+          "id": "POFWUvpVJHkstIgT",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "gerar-audio",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "37f081c9-586c-47d1-9786-64246d19dee4",
+      "name": "Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [20, 580],
+      "webhookId": "944ea8bb-b3e2-4966-959a-b4d270740d2f"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ $json }}",
+        "options": {}
+      },
+      "id": "84978de5-f2d7-4175-8f09-0d609d5a875b",
+      "name": "Responder com URL do Áudio",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [1160, 580]
+    },
+    {
+      "parameters": {
+        "resource": "audio",
+        "input": "={{ $('Webhook').item.json.body.textoExtraido }}",
+        "voice": "nova",
+        "options": {
+          "response_format": "mp3",
+          "binaryPropertyOutput": "data"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.openAi",
+      "typeVersion": 1.8,
+      "position": [520, 580],
+      "id": "4f82e0f7-2cc2-48b3-b646-4fbb4fc97cb0",
+      "name": "OpenAI1",
+      "credentials": {
+        "openAiApi": {
+          "id": "POFWUvpVJHkstIgT",
+          "name": "OpenAi account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "name": "={{$json.outputFileName}}",
+        "driveId": {
+          "__rl": true,
+          "mode": "list",
+          "value": "My Drive"
+        },
+        "folderId": {
+          "__rl": true,
+          "value": "1-ALH9AnvLdyy5MfaQBUc3h5-MWihfxLC",
+          "mode": "id"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [740, 580],
+      "id": "dbe0bb89-0a46-4240-9615-0a74ba44d496",
+      "name": "Google Drive",
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "OCGIPFaShzsruM57",
+          "name": "Google Drive account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "   // O Google Drive retorna dados sobre o arquivo salvo\n   const driveFileData = $input.first().json;\n   \n   // Construir a resposta para a aplicação Electron\n   return {\n     url: `https://drive.google.com/file/d/${driveFileData.id}/view`,\n     mp3Link: `https://drive.google.com/uc?export=download&id=${driveFileData.id}`,\n     status: \"completed\",\n     fileName: driveFileData.name,\n     message: \"Arquivo de áudio gerado com sucesso\",\n     driveId: driveFileData.id,\n     // Metadata adicional que pode ser útil\n     mimeType: driveFileData.mimeType,\n     size: driveFileData.size\n   };"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [960, 580],
+      "id": "69b5a3cc-e3c7-4073-a885-90206a29883f",
+      "name": "Code"
+    },
+    {
+      "parameters": {
+        "jsCode": "   // Limita o texto para não exceder limites da OpenAI (tokens)\n   const textoExtraido = $input.item.json.textoExtraido;\n   const fileName = $input.item.json.fileName;\n   const fileId = $input.item.json.fileId;\n   \n   // Limitar texto para a API da OpenAI (opcional)\n   // Texto muito longo pode ser dividido ou truncado\n   //const textoTratado = textoExtraido.slice(0, 4000);\n   \n   // Criar nome de arquivo único\n   const timestamp = Date.now();\n   const outputFileName = `${fileId}_audio_${timestamp}.mp3`;\n   \n   return {\n     textoParaAudio: textoExtraido,\n     fileName: fileName,\n     fileId: fileId,\n     outputFileName: outputFileName\n   };"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [280, 580],
+      "id": "ea6744a5-9907-4ac1-9e6e-5864f2d9f3d6",
+      "name": "Code1"
+    }
+  ],
+  "connections": {
+    "AI Agent": {
+      "main": [
+        [
+          {
+            "node": "OpenAI",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Set - ARMAZENA TEXTO EXTRAÍDO": {
+      "main": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook - RECEBE TEXTO": {
+      "main": [
+        [
+          {
+            "node": "Set - ARMAZENA TEXTO EXTRAÍDO",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI": {
+      "main": [
+        [
+          {
+            "node": "Respond to Webhook",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Code1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI1": {
+      "main": [
+        [
+          {
+            "node": "Google Drive",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Drive": {
+      "main": [
+        [
+          {
+            "node": "Code",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code": {
+      "main": [
+        [
+          {
+            "node": "Responder com URL do Áudio",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code1": {
+      "main": [
+        [
+          {
+            "node": "OpenAI1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "pinData": {},
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "9da6405996fea89e820c9e7b06e938406d43620d2eb195e4778f5ba9af0a69fa"
+  }
+}

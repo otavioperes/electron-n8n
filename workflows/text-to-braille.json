@@ -1,0 +1,127 @@
+{
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "gerar-braille",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "5827944c-4aad-4abe-813f-b600d5d4c0da",
+      "name": "Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [-460, -80],
+      "webhookId": "de0df8af-dcf8-41d9-8a4f-2548a16b937c"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Extrai os dados da requisição\nconst brailleContent = $input.item.json.body?.brailleContent || $input.item.json.brailleContent;\nconst fileName = $input.item.json.body?.fileName || $input.item.json.fileName;\nconst fileId = $input.item.json.body?.fileId || $input.item.json.fileId;\n\n// Verificação de segurança\nif (!brailleContent) {\n  throw new Error('Conteúdo Braille não fornecido');\n}\n\n// Preparar para upload no Drive\nreturn {\n  outputFileName: fileName,\n  originalFileId: fileId,\n  binary: {\n    data: {\n      mimeType: 'text/plain',\n      data: Buffer.from(brailleContent).toString('base64')\n    }\n  }\n};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [-200, -80],
+      "id": "baf483db-ee59-48f9-b220-6f2399c0255c",
+      "name": "Preparar Upload"
+    },
+    {
+      "parameters": {
+        "name": "={{$json.outputFileName}}",
+        "driveId": {
+          "__rl": true,
+          "mode": "list",
+          "value": "My Drive"
+        },
+        "folderId": {
+          "__rl": true,
+          "value": "1-Vq8AUU2Oqjks2S66j_UvCqCtMhtRBrM",
+          "mode": "id"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleDrive",
+      "typeVersion": 3,
+      "position": [20, -80],
+      "id": "e89f0ccf-628c-4afa-99b3-2874340da7f7",
+      "name": "Google Drive",
+      "credentials": {
+        "googleDriveOAuth2Api": {
+          "id": "OCGIPFaShzsruM57",
+          "name": "Google Drive account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// O Google Drive retorna dados sobre o arquivo salvo\nconst driveFileData = $input.first().json;\n\n// Construir a resposta para a aplicação Electron\nreturn {\n  url: `https://drive.google.com/file/d/${driveFileData.id}/view`,\n  brailleLink: `https://drive.google.com/file/d/${driveFileData.id}/view`, \n  status: \"completed\",\n  fileName: driveFileData.name,\n  message: \"Arquivo Braille salvo com sucesso no Drive\",\n  driveId: driveFileData.id,\n  mimeType: driveFileData.mimeType,\n  size: driveFileData.size\n};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [240, -80],
+      "id": "cf11b62e-069f-4b2d-ad64-a6ce1e8e7a2a",
+      "name": "Formatar Resposta"
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ $json }}",
+        "options": {}
+      },
+      "id": "730555f2-9f84-4594-a686-9726dc36926c",
+      "name": "Responder com URL do Braille",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [500, -80]
+    }
+  ],
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Preparar Upload",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Preparar Upload": {
+      "main": [
+        [
+          {
+            "node": "Google Drive",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Drive": {
+      "main": [
+        [
+          {
+            "node": "Formatar Resposta",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Formatar Resposta": {
+      "main": [
+        [
+          {
+            "node": "Responder com URL do Braille",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "pinData": {},
+  "meta": {
+    "instanceId": "9da6405996fea89e820c9e7b06e938406d43620d2eb195e4778f5ba9af0a69fa"
+  }
+}
