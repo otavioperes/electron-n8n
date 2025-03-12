@@ -37,5 +37,4 @@ Thumbs.db
 *.sublime-workspace
 
 # Arquivos específicos da aplicação que contêm credenciais
-# Descomente se não quiser enviar este arquivo para o GitHub
-# service-account.json 
+service-account.json 
