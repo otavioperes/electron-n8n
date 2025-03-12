@@ -2,6 +2,8 @@
 
 Aplicativo desktop desenvolvido com Electron para integração com o Google Drive e n8n, permitindo a geração de recursos educacionais em múltiplos formatos (áudio, braille, PDF, questões) a partir de documentos do Word/Google Docs.
 
+> Versão: 1.0.1 - Código modularizado
+
 ## Estrutura do Projeto
 
 O projeto foi organizado em uma estrutura modular:
